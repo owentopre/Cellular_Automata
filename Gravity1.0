@@ -1,0 +1,82 @@
+import math
+
+from numpy import empty
+from sqlalchemy import false, true
+"""
+    Grid = fig.Data
+"""
+class CustomError(Exception):
+    pass
+
+def RoundU(number, div):
+    return number//div + number%div>0
+
+def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1], [x2, y2, z2], ...] with each cells x,y,z coord?
+    GridLength = [10, 10, 10]               # Grid x, y, z coordinates
+    Cells = len(Data)
+    radius = 5                              # radius of which the gravity will affect
+    for i in range(3):                      # A quick fix to prevent the function breaking for Grid > gravity's influence
+        if radius > GridLength[i]:
+            radius = GridLength[i]
+    apc = radius                            # Acceleration Per Cell mass
+    NewGrid = []
+    Grid = Data
+    Vel = InitialInertia
+
+    d = RoundU(radius, 2)
+    for i in range(Cells):                  # Finding the acceleration of each cell
+        for ii in range(Cells):
+            if i != ii:
+                x = Grid[i][0] - Grid[ii][0]
+                y = Grid[i][1] - Grid[ii][1]
+                z = Grid[i][2] - Grid[ii][2]
+                r = math.sqrt((x**2)*(y**2)*(z**2))
+                if r <= radius:
+                    if x != 0: Vel[i][0] += RoundU((radius + 1 - abs(x)) * apc//radius, 1) * (abs(x)/x)
+                    if y != 0: Vel[i][1] += RoundU((radius + 1 - abs(y)) * apc//radius, 1) * (abs(y)/y)
+                    if z != 0: Vel[i][2] += RoundU((radius + 1 - abs(z)) * apc//radius, 1) * (abs(z)/z)
+    NextTo = []
+    for i in range(Cells):
+        Size = 0
+        Direc = [0, 0]
+        for ii in range(3):
+            if abs(Vel[i][ii]) > Size:      # Finding which direction the cell will move
+                Size = Vel[i][ii]
+                Direc[0] = ii
+                if Vel[i][ii] > 0: Direc[1] = 1
+                else: Direc[1] = -1
+        flag = False
+        for ii in range(Cells):             # Searches for possible collisions
+            for iii in range(Vel[i][Direc[0]]):
+                if Grid[i][Direc[0]]+(Direc[1]*iii) == Grid[ii]:
+                    NextTo.append([i, Direc])
+                    flag = True
+                    break
+            if flag:
+                break
+        if not flag:                        # Cells which don't collide are moved
+            NewGrid[i][Direc[0]] = Grid[i][Direc[0]] + Vel[i][Direc[0]]
+
+    Grid = NewGrid
+    for i in range(len(NextTo)):            # Moves cells which do collide. Collisions are elastic (like snooker balls)
+        flag = [False, radius, 0]
+        for ii in range(Cells):             # Checks which previous collions no longer happen
+            if flag[0]: break
+            for iii in range(Vel[NextTo[i][0]][NextTo[i][1][0]]):
+                if Grid[NextTo[i][0]][NextTo[i][1][0]]+(NextTo[i][1][1]*iii) == Grid[ii]:
+                    if iii < flag[1]:
+                        flag[1] = iii
+                        flag[2] = ii
+                    if iii==0: flag[0] = True
+                    break
+        if flag[1]==0:                      # Cells directly next to another in the direction of motion transfer all inertia
+            Vel[flag[2]][NextTo[i][1][0]] += Vel[NextTo[i][0]][NextTo[i][1][0]]
+            Vel[NextTo[i][0]][NextTo[i][1][0]] -= Vel[NextTo[i][0]][NextTo[i][1][0]]
+        else:                               # Otherwise they move to where the collions occurs then transfers all remaining inertia
+            NewGrid[NextTo[i][0]][NextTo[i][1][0]] = Grid[NextTo[i][0]][NextTo[i][1][0]] + (flag[1]-1)*NextTo[i][1][1]
+            Vel[NextTo[i][0]][NextTo[i][1][0]] -= (flag[1]-1)*NextTo[i][1][1]
+            Vel[flag[2]][NextTo[i][1][0]] += (flag[1]-1)*NextTo[i][1][1]
+
+        if Vel[NextTo[i][0]][NextTo[i][1][0]] != 0:             # In case an inertia calculation is wrong for collions
+            raise CustomError("Error during collision inertia calculations")
+    return NewGrid, Vel
