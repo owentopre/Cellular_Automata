@@ -46,7 +46,7 @@ def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1],
     GridLength = [10, 10, 10]               # Grid x, y, z coordinates
     Cells = len(Data)
     radius = 5                              # radius of which the gravity will affect
-    for i in range(3):                      # A quick fix to prevent the function breaking for Grid > gravity's influence
+    for i in range(3):                      # A quick fix to prevent the function breaking for Grid < gravity's influence
         if radius > GridLength[i]:
             radius = GridLength[i]
     apc = radius                            # Acceleration Per Cell mass
