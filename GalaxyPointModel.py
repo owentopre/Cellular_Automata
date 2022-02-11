@@ -146,10 +146,8 @@ def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1],
             Vel[NextTo[i][0]][NextTo[i][1][0]] -= (flag[1]-1)*NextTo[i][1][1]
             Vel[flag[2]][NextTo[i][1][0]] += (flag[1]-1)*NextTo[i][1][1]
     ReturnGrid = []
-    for i in range(len(NewGrid))
-        ReturnGrid.append(NewGrid[i%3][0]
-        ReturnGrid.append(NewGrid[i%3][1]
-        ReturnGrid.append(NewGrid[i%3][2]
+    for i in range(3*len(NewGrid))
+        ReturnGrid.append(NewGrid[i%len(NewGrid)][i//len(NewGrid)]
     #return ReturnGrid                      
     return NewGrid, Vel
 
