@@ -21,7 +21,7 @@ np.random.seed(19680801)
 #space size (mxmxm cube):
 m = 10
 #maximuminitial speed
-maxspeed = 100
+maxspeed = 10
 #number of starting particles:
 startno = 10
 particles = []
@@ -33,26 +33,34 @@ for a in range (startno):
 for b in range (startno):
     velocity.append((random.randint(0, maxspeed),random.randint(0, maxspeed),random.randint(0, maxspeed)))
     
-    
+for k in range(3):
+    print(k)    
+
 #show a point at 0,0,0
 
-print(particles)
-print(velocity[0][0])
+#print(particles)
+#print(velocity[0])
+
+#print(velocity[0])
 
 def RoundU(number, div):
     return number//div + number%div>0
+
+def ceildiv(a, b):
+    return -(a // -b)
 
 def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1], [x2, y2, z2], ...] with each cells x,y,z coord?
     GridLength = [10, 10, 10]               # Grid x, y, z coordinates
     Cells = len(Data)
     radius = 5                              # radius of which the gravity will affect
-    for i in range(3):                      # A quick fix to prevent the function breaking for Grid < gravity's influence
+    for i in range(3):                      # A quick fix to prevent the function breaking for Grid > gravity's influence
         if radius > GridLength[i]:
             radius = GridLength[i]
     apc = radius                            # Acceleration Per Cell mass
     NewGrid = []
     Grid = Data
     Vel = InitialInertia
+    Vel2 = []
 
     d = RoundU(radius, 2)
     for i in range(Cells):                  # Finding the acceleration of each cell
@@ -63,30 +71,53 @@ def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1],
                 z = Grid[i][2] - Grid[k][2]
                 r = math.sqrt((x**2)*(y**2)*(z**2))
                 if r <= radius:
-                    if x != 0: Vel[i][0] += RoundU((radius + 1 - abs(x)) * apc//radius, 1) * (abs(x)/x)
-                    if y != 0: Vel[i][1] += RoundU((radius + 1 - abs(y)) * apc//radius, 1) * (abs(y)/y)
-                    if z != 0: Vel[i][2] += RoundU((radius + 1 - abs(z)) * apc//radius, 1) * (abs(z)/z)
+                    v1 = Vel[i][0]
+                    v2 = Vel[i][1]
+                    v3 = Vel[i][2]
+                    #print(Vel)
+                    #print(Vel[1][1])
+                    #print(Vel[i][0])
+                    #print(i,k)
+                    if x != 0: 
+                        v1 += (radius + 1 - abs(x)) * ceildiv(apc,radius) * (abs(x)/x)
+                    if y != 0: 
+                        v2 += (radius + 1 - abs(y)) * ceildiv(apc,radius) * (abs(y)/y)
+                    if z != 0: 
+                        v3 += (radius + 1 - abs(z)) * ceildiv(apc,radius) * (abs(z)/z)
+                        
+                    Vel2.append([int(v1),int(v2),int(v3)])
+                    #print(Vel2)
+                    Vel = Vel2
+                    
     NextTo = []
     for i in range(Cells):
         Size = 0
         Direc = [0, 0]
         for k in range(3):
+            print(k)
             if abs(Vel[i][k]) > Size:      # Finding which direction the cell will move
                 Size = Vel[i][k]
+                #print(Direc)
                 Direc[0] = k
+                #print(Direc)
                 if Vel[i][k] > 0: Direc[1] = 1
                 else: Direc[1] = -1
         flag = False
         for k in range(Cells):             # Searches for possible collisions
             for l in range(Vel[i][Direc[0]]):
-                if Grid[i][Direc[0]]+(Direc[1]*iii) == Grid[k]:
+                if Grid[i][Direc[0]]+(Direc[1]*l) == Grid[k]:
                     NextTo.append([i, Direc])
                     flag = True
                     break
             if flag:
                 break
-        if not flag:                        # Cells which don't collide are moved
-            NewGrid[i][Direc[0]] = Grid[i][Direc[0]] + Vel[i][Direc[0]]
+        if not flag:    # Cells which don't collide are moved
+                a = 0
+                b = 0
+                            
+                NewGrid[i][Direc[0]] = Grid[i][Direc[0]] + Vel[i][Direc[0]]
+                
+                
 
     Grid = NewGrid
     for i in range(len(NextTo)):            # Moves cells which do collide. Collisions are elastic (like snooker balls)
