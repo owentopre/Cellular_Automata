@@ -33,8 +33,8 @@ for a in range (startno):
 for b in range (startno):
     velocity.append((random.randint(0, maxspeed),random.randint(0, maxspeed),random.randint(0, maxspeed)))
     
-for k in range(3):
-    print(k)    
+#for k in range(3):
+    #print(k)    
 
 #show a point at 0,0,0
 
@@ -94,14 +94,16 @@ def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1],
         Size = 0
         Direc = [0, 0]
         for k in range(3):
-            print(k)
+            #print(k)
             if abs(Vel[i][k]) > Size:      # Finding which direction the cell will move
                 Size = Vel[i][k]
                 #print(Direc)
                 Direc[0] = k
                 #print(Direc)
-                if Vel[i][k] > 0: Direc[1] = 1
-                else: Direc[1] = -1
+                if Vel[i][k] > 0: 
+                    Direc[1] = 1
+                else: 
+                    Direc[1] = -1
         flag = False
         for k in range(Cells):             # Searches for possible collisions
             for l in range(Vel[i][Direc[0]]):
@@ -110,12 +112,17 @@ def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1],
                     flag = True
                     break
             if flag:
+                NewGrid.append(Grid[i])
                 break
+                
         if not flag:    # Cells which don't collide are moved
-                a = 0
-                b = 0
-                            
-                NewGrid[i][Direc[0]] = Grid[i][Direc[0]] + Vel[i][Direc[0]]
+                temp = []
+                for a in range(3):
+                    if Direc[0] == a:
+                        temp.append(Grid[i][Direc[0]] + Vel[i][Direc[0]])
+                    else:
+                        temp.append(Grid[i][a])            
+                NewGrid.append(temp)
                 
                 
 
@@ -141,11 +148,18 @@ def Gravity(Data, InitialInertia):          # Data is a list like [[x1, y1, z1],
 
         if Vel[NextTo[i][0]][NextTo[i][1][0]] != 0:             # In case an inertia calculation is wrong for collions
             raise CustomError("Error during collision inertia calculations")
+        
     return NewGrid, Vel
 
-test = Gravity(particles, velocity)
+fig = plt.figure()
+ax = p3.Axes3D(fig)
 
-print(test)
+dataPoint = Gravity(particles, velocity)
+print(dataPoint)
+print(dataPoint[0][1][0])
+points = [ax.plot((dataPoint[0][i][0]), (dataPoint[0][i][1]), (dataPoint[0][i][2]))[0] for [i] in range(dataPoint[0])]
+
+#print(test)
 
 def Gen_RandLine(length, dims=2):
     """
@@ -175,15 +189,17 @@ def update_lines(num, dataLines, lines):
     return lines
 
 # Attaching 3D axis to the figure
-fig = plt.figure()
-ax = p3.Axes3D(fig)
+
 
 # Fifty lines of random 3-D lines
 data = [Gen_RandLine(25, 3) for index in range(50)]
 
+
 # Creating fifty line objects.
 # NOTE: Can't pass empty arrays into 3d version of plot()
+print([(dat[0, 0:1], dat[1, 0:1], dat[2, 0:1])[0] for dat in data])
 lines = [ax.plot(dat[0, 0:1], dat[1, 0:1], dat[2, 0:1])[0] for dat in data]
+#print(lines)
 
 # Setting the axes properties
 ax.set_xlim3d([0.0, m])
@@ -196,12 +212,13 @@ ax.set_zlim3d([0.0, m])
 ax.set_zlabel('Z')
 
 ax.set_title('3D Test')
-
+'''
 # Creating the Animation object
 line_ani = animation.FuncAnimation(fig, update_lines, 25, fargs=(data, lines),
                                    interval=50, blit=False)
-
-line_ani = animation.FuncAnimation(fig, )
+'''
+line_ani = animation.FuncAnimation(fig, Gravity, 25, fargs=(dataPoint, points),
+                                   interval=50, blit=False)
 
 #print(data)
 
